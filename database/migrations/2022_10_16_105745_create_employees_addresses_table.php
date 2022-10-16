@@ -15,7 +15,11 @@ return new class extends Migration
     {
         Schema::create('employees_addresses', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger("employee")->length(5);
+            $table->string("address",500)->unique();
             $table->timestamps();
+            $table->foreign('employee')
+                 ->references('id')->on('employees')->onDelete('cascade');
         });
     }
 

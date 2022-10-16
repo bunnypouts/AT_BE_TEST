@@ -15,17 +15,30 @@ class EmployeesController extends Controller
      */
     public function index()
     {
-        //
-    }
+        try{
+            $employees = Employees::all();
+            $msg = "Employees data not available";
+            
+            if(count($employees)>0){
+                $msg = "Employees data";
+            }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+            return response()->json([
+                    'status'=>true,
+                    'message'=>$msg,
+                    'data' => [
+                            'total' => count($employees),
+                            'employees' => $employees
+                        ]
+                    ],200);
+
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],500);
+        }
+
     }
 
     /**
@@ -36,30 +49,35 @@ class EmployeesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
+        try{
+
+            $validated = $request->validate([
+                'name' => ['required','max:50'],
+                'email' => ['required','unique:employees','regex:/^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$/','max:150'],
+                'department' => ['required']
+            ],[
+                'name.required' => 'Enter Employee name correctly',
+                'email.unique' => 'Employee email already exists',
+                'email.regex' => 'Employee email invalid',
+            ]);
+
+            $employee = Employees::create($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => "Employee Created successfully!",
+                'post' => $employee
+            ], 200);
+            
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],isset($e->status) ?$e->status : 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Employees  $employees
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Employees $employees)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Employees  $employees
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Employees $employees)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -68,9 +86,40 @@ class EmployeesController extends Controller
      * @param  \App\Models\Employees  $employees
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Employees $employees)
+    public function update(Request $request, Employees $employees,$id)
     {
-        //
+        try{
+
+            $data = $employees->find($id);
+
+            if(!isset($data->id)){
+                throw new \Exception("Employee not found for update",404);
+            }
+
+            $validated = $request->validate([
+                'name' => ['max:50'],
+                'email' => ['unique:employees','regex:/^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$/','max:150'],
+                'department' => ['max:7']
+            ],[
+                'name.required' => 'Enter Employee name correctly',
+                'email.unique' => 'Employee email already exists',
+                'email.regex' => 'Employee email invalid',
+            ]);
+            
+            $data->update($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => "Employee Updated successfully!",
+                'post' => $data
+            ], 200);
+
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],isset($e->status) ? $e->status : ($e->getCode()?  $e->getCode() : 500));
+        }
     }
 
     /**
@@ -79,8 +128,29 @@ class EmployeesController extends Controller
      * @param  \App\Models\Employees  $employees
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Employees $employees)
+    public function destroy(Employees $employees,$id)
     {
-        //
+         
+        try{
+
+            $data = $employees->find($id);
+
+            if(!isset($data->id)){
+                throw new \Exception("Employee not found for delete",404);
+            }
+
+            $data->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Employee Deleted successfully!",
+            ], 200);
+
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],isset($e->status) ?$e->status : ($e->getCode()?  $e->getCode() : 500));
+        }
     }
 }

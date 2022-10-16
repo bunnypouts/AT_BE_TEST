@@ -15,7 +15,12 @@ return new class extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
+            $table->string("name",50);
+            $table->string("email",150)->unique();
+            $table->unsignedBigInteger("department")->length(3);
             $table->timestamps();
+            $table->foreign('department')
+                 ->references('id')->on('departments');
         });
     }
 

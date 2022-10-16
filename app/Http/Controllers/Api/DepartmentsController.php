@@ -15,17 +15,29 @@ class DepartmentsController extends Controller
      */
     public function index()
     {
-        //
-    }
+        try{
+            $departments = Departments::all();
+            $msg = "Departments data not available";
+            
+            if(count($departments)>0){
+                $msg = "Departments data";
+            }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+            return response()->json([
+                    'status'=>true,
+                    'message'=>$msg,
+                    'data' => [
+                            'total' => count($departments),
+                            'departments' => $departments
+                        ]
+                    ],200);
+
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],500);
+        }
     }
 
     /**
@@ -36,29 +48,29 @@ class DepartmentsController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        try{
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Departments  $departments
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Departments $departments)
-    {
-        //
-    }
+            $validated = $request->validate([
+                'name' => ['required','unique:departments','max:20']
+            ],[
+                'name.required' => 'Enter Department name correctly',
+                'name.unique' => 'Department name already exists',
+            ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Departments  $departments
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Departments $departments)
-    {
-        //
+            $department = Departments::create($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => "Department Created successfully!",
+                'post' => $department
+            ], 200);
+            
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],isset($e->status) ?$e->status : 500);
+        }
     }
 
     /**
@@ -68,9 +80,37 @@ class DepartmentsController extends Controller
      * @param  \App\Models\Departments  $departments
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Departments $departments)
+    public function update(Request $request, Departments $departments,$id)
     {
-        //
+        try{
+
+            $data = $departments->find($id);
+
+            if(!isset($data->id)){
+                throw new \Exception("Department not found for update",404);
+            }
+
+            $validated = $request->validate([
+                'name' => ['required','unique:departments','max:20']
+            ],[
+                'name.required' => 'Enter Department name correctly',
+                'name.unique' => 'Department name already exists',
+            ]);
+            
+            $data->update($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => "Department Updated successfully!",
+                'post' => $data
+            ], 200);
+
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],isset($e->status) ?$e->status : ($e->getCode()?  $e->getCode() : 500));
+        }
     }
 
     /**
@@ -79,8 +119,29 @@ class DepartmentsController extends Controller
      * @param  \App\Models\Departments  $departments
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Departments $departments)
-    {
-        //
+    public function destroy(Departments $departments,$id)
+    {   
+        
+        try{
+
+            $data = $departments->find($id);
+
+            if(!isset($data->id)){
+                throw new \Exception("Department not found for delete",404);
+            }
+
+            $data->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Department Deleted successfully!",
+            ], 200);
+
+        }catch(\Exception|\Throwable $e){
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ],isset($e->status) ?$e->status : ($e->getCode()?  $e->getCode() : 500));
+        }
     }
 }

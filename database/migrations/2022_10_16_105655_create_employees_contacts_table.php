@@ -15,7 +15,11 @@ return new class extends Migration
     {
         Schema::create('employees_contacts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger("employee")->length(5);
+            $table->string("contact",10)->unique();
             $table->timestamps();
+            $table->foreign('employee')
+                 ->references('id')->on('employees')->onDelete('cascade');
         });
     }
 
